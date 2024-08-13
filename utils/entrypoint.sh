@@ -6,6 +6,11 @@
 # It looks in common places for the files & executables it needs
 # and thus should be compatible with major Linux distros.
 
+exec 3>&1 4>&2
+trap 'exec 2>&4 1>&3' 0 1 2 3
+exec 1>/var/log/zm/entrypoint.log 2>&1
+set -x
+
 ###############
 # SUBROUTINES #
 ###############
@@ -403,7 +408,9 @@ else
     usermod -d /var/lib/mysql/ mysql > /dev/null 2>&1
     start_mysql
 
-    mysql -u root -e "CREATE USER 'zmuser'@'localhost' IDENTIFIED BY 'zmpass';"
+    sed -i -e "s/ZM_DB_HOST=.*$/ZM_DB_HOST=127.0.0.1/g" $ZMCONF
+
+    mysql -u root -e "CREATE USER 'zmuser'@'localhost' IDENTIFIED WITH mysql_native_password BY 'zmpass';"
     mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'zmuser'@'localhost';"
 
     if [ "$(zm_db_exists)" -eq "0" ]; then

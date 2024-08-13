@@ -21,8 +21,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt install --assume-yes zoneminder \
 # Setup Volumes
 VOLUME /var/cache/zoneminder/events /var/cache/zoneminder/images /var/lib/mysql /var/log/zm
 
+RUN rm -rf /var/log/mysql
+RUN ln -s /var/log/zm /var/log/mysql
+RUN sed -i -e "s/Listen 80$/Listen 8080/g" /etc/apache2/ports.conf
+RUN sed -i -e "s/<VirtualHost \*:80>/<VirtualHost \*:8080>/g" /etc/apache2/sites-enabled/000-default.conf
+
 # Expose http port
-EXPOSE 80
+EXPOSE 8080
 
 # Configure entrypoint
 COPY utils/entrypoint.sh /usr/local/bin/
